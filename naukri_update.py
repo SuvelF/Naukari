@@ -7,7 +7,6 @@ import re
 NAUKRI_EMAIL = os.environ.get("NAUKRI_EMAIL")
 NAUKRI_PASSWORD = os.environ.get("NAUKRI_PASSWORD")
 
-# Your full skills pool - agent will rotate within these
 SKILLS_POOL = [
     "Core Java", "DevOps", "Spring Boot", "REST API", "Microservices", 
     "JPA", "Hibernate", "SQL", "Spring MVC", "JDBC", "SOAP", "Agile", 
@@ -18,60 +17,47 @@ SKILLS_POOL = [
 
 def get_new_headline(current_headline):
     print(f"Current Headline: {current_headline}")
-    print(f"Length: {len(current_headline)} chars")
     
-    # Find which skills from pool are currently present
     present_skills = []
     not_present_skills = []
     
     for skill in SKILLS_POOL:
-        # Use word boundary check so \'Java\' doesn\'t match \'JavaScript\' incorrectly
-        pattern = r\'\b\' + re.escape(skill) + r\'\b\'
+        pattern = r"\b" + re.escape(skill) + r"\b"
         if re.search(pattern, current_headline, flags=re.IGNORECASE):
             present_skills.append(skill)
         else:
             not_present_skills.append(skill)
     
-    print(f"Present skills: {present_skills}")
-    print(f"Not present skills: {not_present_skills}")
+    print(f"Present: {present_skills}")
+    print(f"Not Present: {not_present_skills}")
     
     new_headline = current_headline
     
-    # 1. REMOVE 1 random skill that is present
+    # 1. REMOVE 1 skill
     if present_skills:
         skill_to_remove = random.choice(present_skills)
         print(f"Removing: {skill_to_remove}")
-        # Remove the skill
-        new_headline = re.sub(r\'\b\' + re.escape(skill_to_remove) + r\'\b\', \'\', new_headline, flags=re.IGNORECASE)
-        # Clean up leftover separators like ,, , | | , and double spaces
-        new_headline = re.sub(r\'\s*,\s*,\s*\', \', \', new_headline)
-        new_headline = re.sub(r\'\s*\|\s*\|\s*\', \' | \', new_headline)
-        new_headline = re.sub(r\'\s*,\s*\|\s*\', \' | \', new_headline)
-        new_headline = re.sub(r\'\s*\|\s*,\s*\', \' | \', new_headline)
-        new_headline = re.sub(r\'\s{2,}\', \' \', new_headline)
+        pattern_remove = r"\b" + re.escape(skill_to_remove) + r"\b"
+        new_headline = re.sub(pattern_remove, "", new_headline, flags=re.IGNORECASE)
+        new_headline = re.sub(r"\s*,\s*,\s*", ", ", new_headline)
+        new_headline = re.sub(r"\s*\|\s*\|\s*", " | ", new_headline)
+        new_headline = re.sub(r"\s*,\s*\|\s*", " | ", new_headline)
+        new_headline = re.sub(r"\s*\|\s*,\s*", " | ", new_headline)
+        new_headline = re.sub(r"\s{2,}", " ", new_headline)
         new_headline = new_headline.strip(" ,|")
-        # Fix ", ," again
-        new_headline = re.sub(r\',\s*,\', \',\', new_headline)
+        new_headline = re.sub(r",\s*,", ",", new_headline)
 
-    # 2. ADD 1 random skill that is NOT present
+    # 2. ADD 1 new skill
     if not_present_skills:
         skill_to_add = random.choice(not_present_skills)
         print(f"Adding: {skill_to_add}")
-        # Add at the end with comma
         if new_headline.endswith("|"):
             new_headline = f"{new_headline} {skill_to_add}"
         else:
             new_headline = f"{new_headline}, {skill_to_add}"
-    else:
-        # If all skills are already present, just add a random one again to trigger update
-        skill_to_add = random.choice(SKILLS_POOL)
-        print(f"All skills present, re-adding: {skill_to_add}")
-        new_headline = f"{new_headline}, {skill_to_add}"
     
-    # Naukri Headline limit is 250 chars - trim if needed
     if len(new_headline) > 250:
-        new_headline = new_headline[:250].rsplit(\',\', 1)[0]
-        print(f"Trimmed to 250 chars: {new_headline}")
+        new_headline = new_headline[:250].rsplit(",", 1)[0]
 
     print(f"New Headline: {new_headline}")
     return new_headline
