@@ -56,20 +56,18 @@ def update_naukri():
         context = browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
         page = context.new_page()
         try:
-            print(f"Email present: {bool(NAUKRI_EMAIL)} Length: {len(NAUKRI_EMAIL) if NAUKRI_EMAIL else 0}", flush=True)
             print("Step 1: Opening login page...", flush=True)
             page.goto("https://www.naukri.com/nlogin/login", timeout=60000, wait_until="domcontentloaded")
             page.wait_for_timeout(7000)
             page.screenshot(path="1_login_page.png")
-            
-            # NEW - Flexible locator for Naukri\'s new design
-            print("Looking for login fields...", flush=True)
-            username_locator = page.locator(\'input[placeholder*="Email"], input[placeholder*="Username"], #usernameField\').first
-            password_locator = page.locator(\'input[type="password"], #passwordField\').first
-            login_btn = page.locator(\'button:has-text("Login")\').first
+
+            print("Filling credentials...", flush=True)
+            # XPath - no quote issue
+            username_locator = page.locator("//input[contains(@placeholder,\'Email\') or contains(@placeholder,\'Username\') or @id=\'usernameField\']").first
+            password_locator = page.locator("//input[@type=\'password\' or @id=\'passwordField\']").first
+            login_btn = page.locator("//button[contains(text(),\'Login\')]").first
 
             username_locator.wait_for(state="visible", timeout=20000)
-            print("Filling credentials...", flush=True)
             username_locator.fill(NAUKRI_EMAIL)
             password_locator.fill(NAUKRI_PASSWORD)
             login_btn.click()
@@ -79,9 +77,7 @@ def update_naukri():
             print(f"After login URL: {page.url}", flush=True)
             
             if "nlogin" in page.url:
-                print("STILL on login page - Email/Password wrong or blocked", flush=True)
-                print(page.content()[:2000])
-                raise Exception("Login failed - Check Secrets NAUKRI_EMAIL / NAUKRI_PASSWORD")
+                raise Exception("Login failed - Check NAUKRI_EMAIL / NAUKRI_PASSWORD secrets")
 
             print("Step 2: Going to profile...", flush=True)
             page.goto("https://www.naukri.com/mnjuser/profile", timeout=60000, wait_until="domcontentloaded")
@@ -89,16 +85,13 @@ def update_naukri():
             page.screenshot(path="3_profile.png")
 
             print("Step 3: Editing Resume Headline...", flush=True)
-            edit_btn = page.locator("span:has-text(\'editOneTheme\'), span:has-text(\'edit\')").first
-            # fallback for new UI
-            if edit_btn.count() == 0:
-                edit_btn = page.locator("xpath=//span[contains(text(),\'Resume headline\')]/../..//span[contains(text(),\'edit\')]").first
+            edit_btn = page.locator("//span[contains(text(),\'Resume headline\')]/../..//span[contains(text(),\'edit\')]").first
             edit_btn.click()
             page.wait_for_timeout(3000)
 
-            textarea = page.locator("textarea#resumeHeadlineTxt").first
+            textarea = page.locator("//textarea[@id=\'resumeHeadlineTxt\']").first
             if textarea.count() == 0:
-                textarea = page.locator("textarea").first
+                textarea = page.locator("//textarea").first
             textarea.wait_for(timeout=10000)
             current_headline = textarea.input_value()
             
@@ -106,7 +99,7 @@ def update_naukri():
             textarea.fill(new_headline)
             page.wait_for_timeout(1000)
             
-            page.locator("button:has-text(\'Save\')").first.click()
+            page.locator("//button[contains(text(),\'Save\')]").first.click()
             page.wait_for_timeout(4000)
             page.screenshot(path="proof.png")
             print(f"SUCCESS: Profile Updated at {time.ctime()}", flush=True)
