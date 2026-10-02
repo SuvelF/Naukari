@@ -2,9 +2,9 @@ name: Naukri Auto Update - 3 Times Daily
 
 on:
   schedule:
-    - cron: '30 1 * * *'  # 7 AM IST
-    - cron: '30 6 * * *'  # 12 PM IST
-    - cron: '30 8 * * *'  # 2 PM IST
+    #- cron: '30 1 * * *'  # 7 AM IST
+   # - cron: '30 6 * * *'  # 12 PM IST
+  #  - cron: '30 8 * * *'  # 2 PM IST
   workflow_dispatch:
 
 jobs:
